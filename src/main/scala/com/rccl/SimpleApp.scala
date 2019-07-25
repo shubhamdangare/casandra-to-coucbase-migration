@@ -1,6 +1,6 @@
 package com.rccl
 
-import java.util.UUID
+
 import org.apache.spark.sql.SparkSession
 import com.couchbase.spark._
 import com.couchbase.spark.sql._
@@ -21,31 +21,21 @@ object SimpleApp {
       .config("com.couchbase.bucket.demo", "")
       .getOrCreate()
 
-
     val cassandraRDD = spark
       .read
       .format("org.apache.spark.sql.cassandra")
-      .options(Map("table" -> "data", "keyspace" -> "excelsior"))
+      .options(Map("table" -> "profile", "keyspace" -> "excelsior"))
       .load()
-    //.select("country_code", "number")
-    //.filter("country_code > 0")
 
-    println("==========================================================================")
+    println(cassandraRDD.printSchema())
+    println(cassandraRDD.explain)
+    println(cassandraRDD.show)
 
-    //println(cassandraRDD.printSchema())
-    //println(cassandraRDD.explain)
-    //println(cassandraRDD.show)
+    import org.apache.spark.sql.functions.{col, _}
 
-    import org.apache.spark.sql.functions._
-    val uuidUDF = udf(UUID.randomUUID().toString)
-    val rddToBeWritten = if (cassandraRDD.columns.contains("id")) {
-      cassandraRDD.withColumn("META_ID", cassandraRDD("id"))
-    } else {
-      cassandraRDD.withColumn("META_ID", uuidUDF())
-    }
+    val rddToBeWritten = cassandraRDD.withColumn("META_ID", concat(col("vds_id"), lit(" "), col("address_city")))
 
     rddToBeWritten.write.couchbase()
-
     println("=============================DONE=Writting=============================================")
   }
 
