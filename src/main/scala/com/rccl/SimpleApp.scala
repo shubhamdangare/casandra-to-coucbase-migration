@@ -5,6 +5,7 @@ import org.apache.spark.sql.SparkSession
 import com.couchbase.spark._
 import com.couchbase.spark.sql._
 
+import org.apache.spark.sql.SaveMode._
 object SimpleApp {
 
   def main(args: Array[String]) {
@@ -35,8 +36,9 @@ object SimpleApp {
 
     val rddToBeWritten = cassandraRDD.withColumn("META_ID", concat(col("vds_id"), lit(" "), col("address_city")))
 
-    rddToBeWritten.write.couchbase()
-    println("=============================DONE=Writting=============================================")
+    rddToBeWritten.write.mode(Overwrite).couchbase()
+
+    println("=============================Done-Writing=============================================")
   }
 
 }
